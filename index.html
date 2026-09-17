@@ -2,123 +2,354 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sorteo Fiesta</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ruleta de la Feria</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
     body {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 16px;
       color: #ffffff;
       text-align: center;
       background-color: #121212;
+      transition: background-color 0.4s ease;
     }
-    /* Colores por día */
-    body.martes { background-color: #d81b60; }   /* Fucsia */
-    body.miercoles { background-color: #00897b; }/* Verde */
-    
+    body.martes { background-color: #d81b60; }
+    body.miercoles { background-color: #00897b; }
+
     .card {
-      background: rgba(0, 0, 0, 0.75);
-      border-radius: 20px;
-      padding: 30px 20px;
-      max-width: 400px;
+      background: rgba(18, 18, 18, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      padding: 24px 18px;
+      max-width: 420px;
       width: 100%;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      backdrop-filter: blur(8px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      backdrop-filter: blur(10px);
     }
-    h1 { font-size: 1.8rem; margin-bottom: 15px; }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+      font-weight: 800;
+    }
+    .subtitle {
+      font-size: 0.95rem;
+      color: #bbb;
+      margin-bottom: 20px;
+    }
+
+    /* Contenedor de la ruleta */
+    .wheel-container {
+      position: relative;
+      width: 290px;
+      height: 290px;
+      margin: 0 auto 24px;
+    }
+    .pointer {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 26px solid #ffd700;
+      z-index: 10;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.7));
+    }
+    canvas {
+      width: 290px;
+      height: 290px;
+      border-radius: 50%;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.7), 0 0 0 5px #ffd700;
+      display: block;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #ffd700, #ff9800);
+      color: #111;
+      border: none;
+      font-weight: 800;
+      font-size: 1.15rem;
+      padding: 14px 28px;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(255, 152, 0, 0.4);
+      transition: transform 0.1s ease, filter 0.2s ease;
+      width: 100%;
+      max-width: 260px;
+    }
+    .btn:active {
+      transform: scale(0.96);
+    }
+    .btn:disabled {
+      background: #555;
+      color: #888;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Cuadro de resultado */
+    .result-box {
+      margin-top: 20px;
+      animation: fadeIn 0.4s ease forwards;
+    }
     .badge {
       display: inline-block;
-      background: #ffd700;
-      color: #000;
       font-weight: 800;
-      padding: 8px 16px;
+      padding: 8px 18px;
       border-radius: 50px;
-      font-size: 1.2rem;
-      margin: 15px 0;
-    }
-    .time-box {
       font-size: 1.1rem;
-      font-weight: bold;
-      margin: 10px 0 20px;
-      color: #ffeb3b;
+      margin: 12px 0 8px;
     }
+    .badge-win { background: #ffd700; color: #111; }
+    .badge-lose { background: #333; color: #eee; }
+
+    .time-box {
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: #ffeb3b;
+      margin-bottom: 14px;
+    }
+
     .rules {
       text-align: left;
       font-size: 0.85rem;
-      background: rgba(255,255,255,0.1);
-      padding: 15px;
-      border-radius: 10px;
-      line-height: 1.4;
-      margin-top: 15px;
+      background: rgba(255,255,255,0.08);
+      padding: 14px;
+      border-radius: 12px;
+      line-height: 1.45;
+      margin-top: 14px;
     }
-    .rules li { margin-left: 20px; margin-bottom: 5px; }
-    .retry-msg { font-size: 1.1rem; line-height: 1.5; color: #ddd; }
+    .rules li {
+      margin-left: 18px;
+      margin-bottom: 5px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
 
-<div class="card" id="app"></div>
+<div class="card" id="app">
+  <h1>🎡 RULETA DE LA FERIA 🎡</h1>
+  <p class="subtitle">¡Prueba suerte y llévate una ronda!</p>
+
+  <div class="wheel-container">
+    <div class="pointer"></div>
+    <canvas id="wheel" width="580" height="580"></canvas>
+  </div>
+
+  <button class="btn" id="spinBtn" onclick="girarRuleta()">¡PROBAR SUERTE!</button>
+
+  <div id="resultado"></div>
+</div>
 
 <script>
-  // 1. Detección del día y color de fondo
-  const diaSemana = new Date().getDay(); // 2 = Martes, 3 = Miércoles
-  if (diaSemana === 2) document.body.classList.add('martes');
-  else if (diaSemana === 3) document.body.classList.add('miercoles');
+  // 1. Detección del día para el color de fondo
+  const dia = new Date().getDay(); // 2 = Martes, 3 = Miércoles
+  if (dia === 2) document.body.classList.add('martes');
+  else if (dia === 3) document.body.classList.add('miercoles');
 
-  const app = document.getElementById('app');
-  const COOLDOWN_MS = 60 * 60 * 1000; // 60 minutos
-  const ultimoEscaneo = localStorage.getItem('ultimo_escaneo_nfc');
+  // 2. Configuración visual de las 8 porciones de la ruleta
+  const sectores = [
+    { text: "CUBATAS", color: "#e91e63", type: "cubata" },
+    { text: "SUERTE", color: "#37474f", type: "nada" },
+    { text: "REBUJITO", color: "#00b0ff", type: "rebujito" },
+    { text: "SUERTE", color: "#263238", type: "nada" },
+    { text: "CHUPITO", color: "#00e676", type: "chupito" },
+    { text: "SUERTE", color: "#37474f", type: "nada" },
+    { text: "REBUJITO", color: "#00b0ff", type: "rebujito" },
+    { text: "SUERTE", color: "#263238", type: "nada" }
+  ];
+
+  const canvas = document.getElementById("wheel");
+  const ctx = canvas.getContext("2d");
+  const numSectores = sectores.length;
+  const arcSize = (2 * Math.PI) / numSectores;
+  let rotationOffset = 0;
+  let isSpinning = false;
+
+  // Dibujar sectores
+  function drawWheel() {
+    const cx = 290, cy = 290, r = 275;
+    ctx.clearRect(0, 0, 580, 580);
+
+    for (let i = 0; i < numSectores; i++) {
+      const angle = rotationOffset + i * arcSize;
+      ctx.beginPath();
+      ctx.fillStyle = sectores[i].color;
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, angle, angle + arcSize);
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#ffd700";
+      ctx.stroke();
+
+      // Textos
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle + arcSize / 2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 26px sans-serif";
+      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.shadowBlur = 6;
+      ctx.fillText(sectores[i].text, r - 30, 9);
+      ctx.restore();
+    }
+
+    // Botón central dorado
+    ctx.beginPath();
+    ctx.arc(cx, cy, 38, 0, 2 * Math.PI);
+    ctx.fillStyle = "#ffd700";
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#ffffff";
+    ctx.stroke();
+  }
+
+  drawWheel();
+
+  // 3. Comprobación del bloqueo de 60 minutos
+  const COOLDOWN = 60 * 60 * 1000;
+  const ultimo = localStorage.getItem("ultimo_tiro_nfc");
   const ahora = Date.now();
+  const resultadoDiv = document.getElementById("resultado");
+  const spinBtn = document.getElementById("spinBtn");
 
-  // 2. Control de tiempo / anti-spam en el móvil
-  if (ultimoEscaneo && (ahora - parseInt(ultimoEscaneo)) < COOLDOWN_MS) {
-    const restanteMin = Math.ceil((COOLDOWN_MS - (ahora - parseInt(ultimoEscaneo))) / 60000);
-    app.innerHTML = `
-      <h1>⏳ Ya has participado</h1>
-      <p class="retry-msg" style="margin-top:15px;">Para evitar que colapses la pegatina, solo se permite un intento por hora.</p>
-      <div class="badge" style="background:#555; color:#fff;">Vuelve a probar en: ${restanteMin} min</div>
+  if (ultimo && (ahora - parseInt(ultimo)) < COOLDOWN) {
+    const restante = Math.ceil((COOLDOWN - (ahora - parseInt(ultimo))) / 60000);
+    spinBtn.disabled = true;
+    spinBtn.textContent = "BLOQUEADO";
+    resultadoDiv.innerHTML = `
+      <div class="result-box">
+        <div class="badge badge-lose">⏳ Ya has participado</div>
+        <p style="color:#bbb; font-size:0.95rem; margin-top:6px;">
+          Solo se permite 1 tirada cada 60 minutos por persona.<br>
+          Podrás volver a girar en <strong>${restante} minutos</strong>.
+        </p>
+      </div>
     `;
-  } else {
-    // Registramos este intento para bloquear los próximos 60 min
-    localStorage.setItem('ultimo_escaneo_nfc', ahora);
+  }
 
-    // 3. Probabilidad de premio (ej: 1 entre 50 = 2% de probabilidad)
-    // Cambia el 50 por el número que consideres
-    const probabilidad = Math.floor(Math.random() * 50);
-    const esGanador = probabilidad === 0;
+  // 4. Lógica de giro y cálculo de probabilidades
+  function girarRuleta() {
+    if (isSpinning) return;
+    isSpinning = true;
+    spinBtn.disabled = true;
+    resultadoDiv.innerHTML = "";
 
-    if (esGanador) {
-      // Hora límite: ahora + 15 minutos
-      const fin = new Date(ahora + 15 * 60 * 1000);
-      const horaStr = fin.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // Guardar timestamp para el bloqueo de 60 minutos
+    localStorage.setItem("ultimo_tiro_nfc", Date.now());
 
-      // Generar ID de premio aleatorio de 4 cifras (ej. #4821)
-      const ticketNum = Math.floor(1000 + Math.random() * 9000);
+    // Probabilidades sobre 100 tiradas:
+    // 0 = Cubatas (1%), 1 a 2 = Rebujito (2%), 3 a 5 = Chupitos (3%), 6 a 99 = Nada (94%)
+    const suerte = Math.floor(Math.random() * 100);
+    let targetType = "nada";
 
-      app.innerHTML = `
-        <h1>🎉 ¡HORA FELIZ! 🎉</h1>
-        <p>¡Has conseguido el premio especial!</p>
-        <div class="badge">TICKET #${ticketNum}</div>
-        <div class="time-box">Válido hasta las ${horaStr}</div>
-        
-        <div class="rules">
-          <strong>Condiciones de canje:</strong>
-          <ul>
-            <li>Enseña esta pantalla de inmediato en la <strong>caja</strong>.</li>
-            <li>Máximo de <strong>4 cubatas con descuento</strong> por premio.</li>
-            <li>No acumulable ni prorrogable pasadas las ${horaStr}.</li>
-          </ul>
+    if (suerte === 0) targetType = "cubata";
+    else if (suerte <= 2) targetType = "rebujito";
+    else if (suerte <= 5) targetType = "chupito";
+
+    // Encontrar índices de sectores correspondientes al resultado
+    const matchingIndices = [];
+    sectores.forEach((sec, idx) => {
+      if (sec.type === targetType) matchingIndices.push(idx);
+    });
+    const selectedSector = matchingIndices[Math.floor(Math.random() * matchingIndices.length)];
+
+    // Calcular el ángulo para que el puntero (arriba = 3*PI/2) apunte al sector exacto
+    const targetAngleAtPointer = (3 * Math.PI) / 2;
+    const sectorCenterAngle = selectedSector * arcSize + arcSize / 2;
+    let targetOffset = targetAngleAtPointer - sectorCenterAngle;
+    while (targetOffset < 0) targetOffset += 2 * Math.PI;
+
+    // Giros completos (5 vueltas) para dar emoción
+    const vueltasCompletas = 5 * 2 * Math.PI;
+    const finalOffset = vueltasCompletas + targetOffset;
+
+    const duracion = 4500;
+    const start = performance.now();
+
+    function animate(time) {
+      const elapsed = time - start;
+      const progress = Math.min(elapsed / duracion, 1);
+      // Desaceleración suave (ease-out cubic)
+      const ease = 1 - Math.pow(1 - progress, 3);
+
+      rotationOffset = ease * finalOffset;
+      drawWheel();
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        isSpinning = false;
+        mostrarPremio(targetType);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  // 5. Mostrar el resultado final
+  function mostrarPremio(tipo) {
+    const fin = new Date(Date.now() + 15 * 60 * 1000);
+    const horaStr = fin.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const ticketId = Math.floor(1000 + Math.random() * 9000);
+
+    if (tipo === "nada") {
+      resultadoDiv.innerHTML = `
+        <div class="result-box">
+          <div class="badge badge-lose">😢 ¡NO HUBO SUERTE!</div>
+          <p style="color:#ddd; margin-top:8px;">Lo sentimos, esta vez no te ha tocado nada.</p>
+          <p style="color:#888; font-size:0.85rem; margin-top:4px;">Podrás volver a probar suerte dentro de 60 minutos.</p>
         </div>
       `;
     } else {
-      app.innerHTML = `
-        <h1>🍻 ¡Casi te toca!</h1>
-        <p class="retry-msg">Esta vez no ha habido suerte con la hora feliz.</p>
-        <p class="retry-msg" style="margin-top: 10px;">¡Vuelve a intentarlo en la siguiente ronda!</p>
+      let titulo = "";
+      let detalle = "";
+
+      if (tipo === "cubata") {
+        titulo = "🎉 ¡HORA FELIZ DE CUBATAS! 🎉";
+        detalle = "Cubatas a precio reducido (máximo 4 consumiciones).";
+      } else if (tipo === "rebujito") {
+        titulo = "🌿 ¡PREMIO DE REBUJITO! 🌿";
+        detalle = "Rebujito a precio especial de fiesta.";
+      } else if (tipo === "chupito") {
+        titulo = "🥃 ¡CHUPITO DE REGALO! 🥃";
+        detalle = "Canjea un chupito gratis al pedir tu consumición.";
+      }
+
+      resultadoDiv.innerHTML = `
+        <div class="result-box">
+          <h2 style="font-size:1.4rem; color:#ffd700; margin-bottom:4px;">${titulo}</h2>
+          <div class="badge badge-win">TICKET #${ticketId}</div>
+          <div class="time-box">Válido hasta las ${horaStr}</div>
+          
+          <div class="rules">
+            <strong>Cómo canjear tu premio:</strong>
+            <ul>
+              <li>${detalle}</li>
+              <li>Enseña esta pantalla de inmediato en la <strong>CAJA</strong>.</li>
+              <li>Válido exclusivamente hasta las <strong>${horaStr}</strong>.</li>
+            </ul>
+          </div>
+        </div>
       `;
     }
   }
