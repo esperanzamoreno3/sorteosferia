@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sorteo Fiesta</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #ffffff;
+      text-align: center;
+      background-color: #121212;
+    }
+    /* Colores por día */
+    body.martes { background-color: #d81b60; }   /* Fucsia */
+    body.miercoles { background-color: #00897b; }/* Verde */
+    
+    .card {
+      background: rgba(0, 0, 0, 0.75);
+      border-radius: 20px;
+      padding: 30px 20px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+    }
+    h1 { font-size: 1.8rem; margin-bottom: 15px; }
+    .badge {
+      display: inline-block;
+      background: #ffd700;
+      color: #000;
+      font-weight: 800;
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      margin: 15px 0;
+    }
+    .time-box {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin: 10px 0 20px;
+      color: #ffeb3b;
+    }
+    .rules {
+      text-align: left;
+      font-size: 0.85rem;
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      border-radius: 10px;
+      line-height: 1.4;
+      margin-top: 15px;
+    }
+    .rules li { margin-left: 20px; margin-bottom: 5px; }
+    .retry-msg { font-size: 1.1rem; line-height: 1.5; color: #ddd; }
+  </style>
+</head>
+<body>
+
+<div class="card" id="app"></div>
+
+<script>
+  // 1. Detección del día y color de fondo
+  const diaSemana = new Date().getDay(); // 2 = Martes, 3 = Miércoles
+  if (diaSemana === 2) document.body.classList.add('martes');
+  else if (diaSemana === 3) document.body.classList.add('miercoles');
+
+  const app = document.getElementById('app');
+  const COOLDOWN_MS = 60 * 60 * 1000; // 60 minutos
+  const ultimoEscaneo = localStorage.getItem('ultimo_escaneo_nfc');
+  const ahora = Date.now();
+
+  // 2. Control de tiempo / anti-spam en el móvil
+  if (ultimoEscaneo && (ahora - parseInt(ultimoEscaneo)) < COOLDOWN_MS) {
+    const restanteMin = Math.ceil((COOLDOWN_MS - (ahora - parseInt(ultimoEscaneo))) / 60000);
+    app.innerHTML = `
+      <h1>⏳ Ya has participado</h1>
+      <p class="retry-msg" style="margin-top:15px;">Para evitar que colapses la pegatina, solo se permite un intento por hora.</p>
+      <div class="badge" style="background:#555; color:#fff;">Vuelve a probar en: ${restanteMin} min</div>
+    `;
+  } else {
+    // Registramos este intento para bloquear los próximos 60 min
+    localStorage.setItem('ultimo_escaneo_nfc', ahora);
+
+    // 3. Probabilidad de premio (ej: 1 entre 50 = 2% de probabilidad)
+    // Cambia el 50 por el número que consideres
+    const probabilidad = Math.floor(Math.random() * 50);
+    const esGanador = probabilidad === 0;
+
+    if (esGanador) {
+      // Hora límite: ahora + 15 minutos
+      const fin = new Date(ahora + 15 * 60 * 1000);
+      const horaStr = fin.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Generar ID de premio aleatorio de 4 cifras (ej. #4821)
+      const ticketNum = Math.floor(1000 + Math.random() * 9000);
+
+      app.innerHTML = `
+        <h1>🎉 ¡HORA FELIZ! 🎉</h1>
+        <p>¡Has conseguido el premio especial!</p>
+        <div class="badge">TICKET #${ticketNum}</div>
+        <div class="time-box">Válido hasta las ${horaStr}</div>
+        
+        <div class="rules">
+          <strong>Condiciones de canje:</strong>
+          <ul>
+            <li>Enseña esta pantalla de inmediato en la <strong>caja</strong>.</li>
+            <li>Máximo de <strong>4 cubatas con descuento</strong> por premio.</li>
+            <li>No acumulable ni prorrogable pasadas las ${horaStr}.</li>
+          </ul>
+        </div>
+      `;
+    } else {
+      app.innerHTML = `
+        <h1>🍻 ¡Casi te toca!</h1>
+        <p class="retry-msg">Esta vez no ha habido suerte con la hora feliz.</p>
+        <p class="retry-msg" style="margin-top: 10px;">¡Vuelve a intentarlo en la siguiente ronda!</p>
+      `;
+    }
+  }
+</script>
+
+</body>
+</html>
