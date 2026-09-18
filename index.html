@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ruleta de la Feria</title>
+  <title>Ruleta Resucitado</title>
   <style>
     * {
       box-sizing: border-box;
@@ -20,39 +20,64 @@
       color: #ffffff;
       text-align: center;
       background-color: #121212;
-      transition: background-color 0.4s ease;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      transition: background 0.4s ease;
     }
-    body.martes { background-color: #d81b60; }
-    body.miercoles { background-color: #00897b; }
+
+    /* Tinte y foto según el día (Martes: Fucsia / Miércoles: Verde) */
+    body.martes {
+      background-image: linear-gradient(rgba(216, 27, 96, 0.85), rgba(136, 14, 79, 0.9)), url('IMG_5861.jpg');
+    }
+    body.miercoles {
+      background-image: linear-gradient(rgba(0, 137, 123, 0.85), rgba(0, 77, 64, 0.9)), url('IMG_5861.jpg');
+    }
+    /* Resto de días (modo prueba con fondo oscuro + foto) */
+    body.default-day {
+      background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(0, 0, 0, 0.9)), url('IMG_5861.jpg');
+    }
 
     .card {
       background: rgba(18, 18, 18, 0.92);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 215, 0, 0.35);
       border-radius: 24px;
-      padding: 24px 18px;
+      padding: 22px 18px;
       max-width: 420px;
       width: 100%;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.65);
       backdrop-filter: blur(10px);
     }
 
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 6px;
-      font-weight: 800;
-    }
-    .subtitle {
-      font-size: 0.95rem;
-      color: #bbb;
-      margin-bottom: 20px;
+    .logo-header {
+      width: 150px;
+      max-width: 60%;
+      margin: 0 auto 10px;
+      display: block;
+      border-radius: 12px;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
     }
 
-    /* Contenedor de la ruleta */
+    h1 {
+      font-size: 1.7rem;
+      margin-bottom: 4px;
+      font-weight: 800;
+      color: #ffd700;
+      letter-spacing: 0.5px;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      color: #eee;
+      margin-bottom: 18px;
+    }
+
+    /* Contenedor Ruleta */
     .wheel-container {
       position: relative;
-      width: 290px;
-      height: 290px;
-      margin: 0 auto 24px;
+      width: 280px;
+      height: 280px;
+      margin: 0 auto 20px;
     }
     .pointer {
       position: absolute;
@@ -65,13 +90,13 @@
       border-right: 14px solid transparent;
       border-top: 26px solid #ffd700;
       z-index: 10;
-      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.7));
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8));
     }
     canvas {
-      width: 290px;
-      height: 290px;
+      width: 280px;
+      height: 280px;
       border-radius: 50%;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.7), 0 0 0 5px #ffd700;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), 0 0 0 5px #ffd700;
       display: block;
     }
 
@@ -85,7 +110,7 @@
       border-radius: 50px;
       cursor: pointer;
       box-shadow: 0 6px 18px rgba(255, 152, 0, 0.4);
-      transition: transform 0.1s ease, filter 0.2s ease;
+      transition: transform 0.1s ease;
       width: 100%;
       max-width: 260px;
     }
@@ -100,7 +125,6 @@
       transform: none;
     }
 
-    /* Cuadro de resultado */
     .result-box {
       margin-top: 20px;
       animation: fadeIn 0.4s ease forwards;
@@ -120,7 +144,7 @@
       font-size: 1.05rem;
       font-weight: bold;
       color: #ffeb3b;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .rules {
@@ -146,12 +170,13 @@
 <body>
 
 <div class="card" id="app">
-  <h1>🎡 RULETA DE LA FERIA 🎡</h1>
-  <p class="subtitle">¡Prueba suerte y llévate una ronda!</p>
+  <img src="IMG_5861.jpg" alt="Caseta El Resucitado" class="logo-header">
+  <h1>RULETA RESUCITADO</h1>
+  <p class="subtitle">¡Prueba suerte en la caseta y llévate premio!</p>
 
   <div class="wheel-container">
     <div class="pointer"></div>
-    <canvas id="wheel" width="580" height="580"></canvas>
+    <canvas id="wheel" width="560" height="560"></canvas>
   </div>
 
   <button class="btn" id="spinBtn" onclick="girarRuleta()">¡PROBAR SUERTE!</button>
@@ -160,20 +185,25 @@
 </div>
 
 <script>
-  // 1. Detección del día para el color de fondo
+  // 1. Detección automática del día
   const dia = new Date().getDay(); // 2 = Martes, 3 = Miércoles
-  if (dia === 2) document.body.classList.add('martes');
-  else if (dia === 3) document.body.classList.add('miercoles');
+  if (dia === 2) {
+    document.body.classList.add('martes');
+  } else if (dia === 3) {
+    document.body.classList.add('miercoles');
+  } else {
+    document.body.classList.add('default-day');
+  }
 
-  // 2. Configuración visual de las 8 porciones de la ruleta
+  // 2. Sectores visuales de la ruleta
   const sectores = [
-    { text: "CUBATAS", color: "#e91e63", type: "cubata" },
+    { text: "CUBATAS", color: "#d81b60", type: "cubata" },
     { text: "SUERTE", color: "#37474f", type: "nada" },
-    { text: "REBUJITO", color: "#00b0ff", type: "rebujito" },
+    { text: "REBUJITO", color: "#0288d1", type: "rebujito" },
     { text: "SUERTE", color: "#263238", type: "nada" },
-    { text: "CHUPITO", color: "#00e676", type: "chupito" },
+    { text: "CHUPITO", color: "#2e7d32", type: "chupito" },
     { text: "SUERTE", color: "#37474f", type: "nada" },
-    { text: "REBUJITO", color: "#00b0ff", type: "rebujito" },
+    { text: "REBUJITO", color: "#0288d1", type: "rebujito" },
     { text: "SUERTE", color: "#263238", type: "nada" }
   ];
 
@@ -184,10 +214,9 @@
   let rotationOffset = 0;
   let isSpinning = false;
 
-  // Dibujar sectores
   function drawWheel() {
-    const cx = 290, cy = 290, r = 275;
-    ctx.clearRect(0, 0, 580, 580);
+    const cx = 280, cy = 280, r = 265;
+    ctx.clearRect(0, 0, 560, 560);
 
     for (let i = 0; i < numSectores; i++) {
       const angle = rotationOffset + i * arcSize;
@@ -200,22 +229,21 @@
       ctx.strokeStyle = "#ffd700";
       ctx.stroke();
 
-      // Textos
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(angle + arcSize / 2);
       ctx.textAlign = "right";
       ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 26px sans-serif";
-      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.font = "bold 25px sans-serif";
+      ctx.shadowColor = "rgba(0,0,0,0.85)";
       ctx.shadowBlur = 6;
-      ctx.fillText(sectores[i].text, r - 30, 9);
+      ctx.fillText(sectores[i].text, r - 25, 9);
       ctx.restore();
     }
 
     // Botón central dorado
     ctx.beginPath();
-    ctx.arc(cx, cy, 38, 0, 2 * Math.PI);
+    ctx.arc(cx, cy, 36, 0, 2 * Math.PI);
     ctx.fillStyle = "#ffd700";
     ctx.fill();
     ctx.lineWidth = 4;
@@ -225,9 +253,9 @@
 
   drawWheel();
 
-  // 3. Comprobación del bloqueo de 60 minutos
+  // 3. Comprobación de bloqueo de 60 minutos
   const COOLDOWN = 60 * 60 * 1000;
-  const ultimo = localStorage.getItem("ultimo_tiro_nfc");
+  const ultimo = localStorage.getItem("ultimo_tiro_resucitado");
   const ahora = Date.now();
   const resultadoDiv = document.getElementById("resultado");
   const spinBtn = document.getElementById("spinBtn");
@@ -238,7 +266,7 @@
     spinBtn.textContent = "BLOQUEADO";
     resultadoDiv.innerHTML = `
       <div class="result-box">
-        <div class="badge badge-lose">⏳ Ya has participado</div>
+        <div class="badge badge-lose">⏳ Ya has probado suerte</div>
         <p style="color:#bbb; font-size:0.95rem; margin-top:6px;">
           Solo se permite 1 tirada cada 60 minutos por persona.<br>
           Podrás volver a girar en <strong>${restante} minutos</strong>.
@@ -247,39 +275,33 @@
     `;
   }
 
-  // 4. Lógica de giro y cálculo de probabilidades
+  // 4. Lógica de sorteo (100 intentos: 1 cubata, 2 rebujitos, 3 chupitos, 94 nada)
   function girarRuleta() {
     if (isSpinning) return;
     isSpinning = true;
     spinBtn.disabled = true;
     resultadoDiv.innerHTML = "";
 
-    // Guardar timestamp para el bloqueo de 60 minutos
-    localStorage.setItem("ultimo_tiro_nfc", Date.now());
+    localStorage.setItem("ultimo_tiro_resucitado", Date.now());
 
-    // Probabilidades sobre 100 tiradas:
-    // 0 = Cubatas (1%), 1 a 2 = Rebujito (2%), 3 a 5 = Chupitos (3%), 6 a 99 = Nada (94%)
     const suerte = Math.floor(Math.random() * 100);
     let targetType = "nada";
 
-    if (suerte === 0) targetType = "cubata";
-    else if (suerte <= 2) targetType = "rebujito";
-    else if (suerte <= 5) targetType = "chupito";
+    if (suerte === 0) targetType = "cubata";        // 1 de cada 100
+    else if (suerte <= 2) targetType = "rebujito";  // 2 de cada 100
+    else if (suerte <= 5) targetType = "chupito";   // 3 de cada 100
 
-    // Encontrar índices de sectores correspondientes al resultado
     const matchingIndices = [];
     sectores.forEach((sec, idx) => {
       if (sec.type === targetType) matchingIndices.push(idx);
     });
     const selectedSector = matchingIndices[Math.floor(Math.random() * matchingIndices.length)];
 
-    // Calcular el ángulo para que el puntero (arriba = 3*PI/2) apunte al sector exacto
     const targetAngleAtPointer = (3 * Math.PI) / 2;
     const sectorCenterAngle = selectedSector * arcSize + arcSize / 2;
     let targetOffset = targetAngleAtPointer - sectorCenterAngle;
     while (targetOffset < 0) targetOffset += 2 * Math.PI;
 
-    // Giros completos (5 vueltas) para dar emoción
     const vueltasCompletas = 5 * 2 * Math.PI;
     const finalOffset = vueltasCompletas + targetOffset;
 
@@ -289,7 +311,6 @@
     function animate(time) {
       const elapsed = time - start;
       const progress = Math.min(elapsed / duracion, 1);
-      // Desaceleración suave (ease-out cubic)
       const ease = 1 - Math.pow(1 - progress, 3);
 
       rotationOffset = ease * finalOffset;
@@ -306,7 +327,7 @@
     requestAnimationFrame(animate);
   }
 
-  // 5. Mostrar el resultado final
+  // 5. Mostrar premio y normas
   function mostrarPremio(tipo) {
     const fin = new Date(Date.now() + 15 * 60 * 1000);
     const horaStr = fin.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -317,7 +338,7 @@
         <div class="result-box">
           <div class="badge badge-lose">😢 ¡NO HUBO SUERTE!</div>
           <p style="color:#ddd; margin-top:8px;">Lo sentimos, esta vez no te ha tocado nada.</p>
-          <p style="color:#888; font-size:0.85rem; margin-top:4px;">Podrás volver a probar suerte dentro de 60 minutos.</p>
+          <p style="color:#aaa; font-size:0.85rem; margin-top:4px;">Podrás volver a probar dentro de 60 minutos.</p>
         </div>
       `;
     } else {
@@ -329,24 +350,24 @@
         detalle = "Cubatas a precio reducido (máximo 4 consumiciones).";
       } else if (tipo === "rebujito") {
         titulo = "🌿 ¡PREMIO DE REBUJITO! 🌿";
-        detalle = "Rebujito a precio especial de fiesta.";
+        detalle = "Rebujito a precio especial de caseta.";
       } else if (tipo === "chupito") {
         titulo = "🥃 ¡CHUPITO DE REGALO! 🥃";
-        detalle = "Canjea un chupito gratis al pedir tu consumición.";
+        detalle = "Canjea un chupito gratis al pedir en caja.";
       }
 
       resultadoDiv.innerHTML = `
         <div class="result-box">
-          <h2 style="font-size:1.4rem; color:#ffd700; margin-bottom:4px;">${titulo}</h2>
+          <h2 style="font-size:1.35rem; color:#ffd700; margin-bottom:4px;">${titulo}</h2>
           <div class="badge badge-win">TICKET #${ticketId}</div>
           <div class="time-box">Válido hasta las ${horaStr}</div>
           
           <div class="rules">
-            <strong>Cómo canjear tu premio:</strong>
+            <strong>Cómo canjear en El Resucitado:</strong>
             <ul>
               <li>${detalle}</li>
               <li>Enseña esta pantalla de inmediato en la <strong>CAJA</strong>.</li>
-              <li>Válido exclusivamente hasta las <strong>${horaStr}</strong>.</li>
+              <li>Válido únicamente hasta las <strong>${horaStr}</strong>.</li>
             </ul>
           </div>
         </div>
