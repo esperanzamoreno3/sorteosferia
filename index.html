@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ruleta Resucitado</title>
+  <title>Ruleta Resucitado - Sorteos</title>
   <style>
     * {
       box-sizing: border-box;
@@ -27,20 +27,19 @@
       transition: background 0.4s ease;
     }
 
-    /* Tinte y foto según el día (Martes: Fucsia / Miércoles: Verde) */
+    /* Colores por día */
     body.martes {
       background-image: linear-gradient(rgba(216, 27, 96, 0.85), rgba(136, 14, 79, 0.9)), url('IMG_5861.jpg');
     }
     body.miercoles {
       background-image: linear-gradient(rgba(0, 137, 123, 0.85), rgba(0, 77, 64, 0.9)), url('IMG_5861.jpg');
     }
-    /* Resto de días (modo prueba con fondo oscuro + foto) */
     body.default-day {
       background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(0, 0, 0, 0.9)), url('IMG_5861.jpg');
     }
 
     .card {
-      background: rgba(18, 18, 18, 0.92);
+      background: rgba(18, 18, 18, 0.94);
       border: 1px solid rgba(255, 215, 0, 0.35);
       border-radius: 24px;
       padding: 22px 18px;
@@ -60,7 +59,7 @@
     }
 
     h1 {
-      font-size: 1.7rem;
+      font-size: 1.65rem;
       margin-bottom: 4px;
       font-weight: 800;
       color: #ffd700;
@@ -72,7 +71,7 @@
       margin-bottom: 18px;
     }
 
-    /* Contenedor Ruleta */
+    /* Ruleta */
     .wheel-container {
       position: relative;
       width: 280px;
@@ -132,13 +131,20 @@
     .badge {
       display: inline-block;
       font-weight: 800;
-      padding: 8px 18px;
+      padding: 10px 24px;
       border-radius: 50px;
-      font-size: 1.1rem;
+      font-size: 1.25rem;
       margin: 12px 0 8px;
     }
-    .badge-win { background: #ffd700; color: #111; }
-    .badge-lose { background: #333; color: #eee; }
+    .badge-win {
+      background: #ffd700;
+      color: #111;
+      border: 2px solid #fff;
+    }
+    .badge-lose {
+      background: #333;
+      color: #eee;
+    }
 
     .time-box {
       font-size: 1.05rem;
@@ -172,7 +178,7 @@
 <div class="card" id="app">
   <img src="IMG_5861.jpg" alt="Caseta El Resucitado" class="logo-header">
   <h1>RULETA RESUCITADO</h1>
-  <p class="subtitle">¡Prueba suerte en la caseta y llévate premio!</p>
+  <p class="subtitle">¡Prueba suerte y llévate descuentos en barra!</p>
 
   <div class="wheel-container">
     <div class="pointer"></div>
@@ -185,25 +191,28 @@
 </div>
 
 <script>
-  // 1. Detección automática del día
-  const dia = new Date().getDay(); // 2 = Martes, 3 = Miércoles
-  if (dia === 2) {
+  // Detección automática de Martes / Miércoles
+  const fechaActual = new Date();
+  const diaSemana = fechaActual.getDay(); // 2 = Martes, 3 = Miércoles
+  const hoyFecha = fechaActual.getDate(); // Día del mes para reiniciar el contador
+
+  if (diaSemana === 2) {
     document.body.classList.add('martes');
-  } else if (dia === 3) {
+  } else if (diaSemana === 3) {
     document.body.classList.add('miercoles');
   } else {
     document.body.classList.add('default-day');
   }
 
-  // 2. Sectores visuales de la ruleta
+  // Sectores de la ruleta
   const sectores = [
-    { text: "CUBATAS", color: "#d81b60", type: "cubata" },
+    { text: "-1,50€ CUBATA", color: "#d81b60", type: "dto_cubata" },
     { text: "SUERTE", color: "#37474f", type: "nada" },
-    { text: "REBUJITO", color: "#0288d1", type: "rebujito" },
+    { text: "-1,00€ REBUJITO", color: "#0288d1", type: "dto_rebujito" },
     { text: "SUERTE", color: "#263238", type: "nada" },
-    { text: "CHUPITO", color: "#2e7d32", type: "chupito" },
+    { text: "1 CHUPITO", color: "#2e7d32", type: "chupito" },
     { text: "SUERTE", color: "#37474f", type: "nada" },
-    { text: "REBUJITO", color: "#0288d1", type: "rebujito" },
+    { text: "-1,00€ REBUJITO", color: "#0288d1", type: "dto_rebujito" },
     { text: "SUERTE", color: "#263238", type: "nada" }
   ];
 
@@ -234,14 +243,13 @@
       ctx.rotate(angle + arcSize / 2);
       ctx.textAlign = "right";
       ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 25px sans-serif";
+      ctx.font = "bold 23px sans-serif";
       ctx.shadowColor = "rgba(0,0,0,0.85)";
       ctx.shadowBlur = 6;
-      ctx.fillText(sectores[i].text, r - 25, 9);
+      ctx.fillText(sectores[i].text, r - 22, 8);
       ctx.restore();
     }
 
-    // Botón central dorado
     ctx.beginPath();
     ctx.arc(cx, cy, 36, 0, 2 * Math.PI);
     ctx.fillStyle = "#ffd700";
@@ -253,7 +261,7 @@
 
   drawWheel();
 
-  // 3. Comprobación de bloqueo de 60 minutos
+  // Bloqueo de 60 minutos
   const COOLDOWN = 60 * 60 * 1000;
   const ultimo = localStorage.getItem("ultimo_tiro_resucitado");
   const ahora = Date.now();
@@ -275,7 +283,7 @@
     `;
   }
 
-  // 4. Lógica de sorteo (100 intentos: 1 cubata, 2 rebujitos, 3 chupitos, 94 nada)
+  // Tirada de la ruleta
   function girarRuleta() {
     if (isSpinning) return;
     isSpinning = true;
@@ -284,12 +292,13 @@
 
     localStorage.setItem("ultimo_tiro_resucitado", Date.now());
 
+    // Probabilidades (1 dto cubata, 2 dto rebujito, 3 chupitos, 94 nada)
     const suerte = Math.floor(Math.random() * 100);
     let targetType = "nada";
 
-    if (suerte === 0) targetType = "cubata";        // 1 de cada 100
-    else if (suerte <= 2) targetType = "rebujito";  // 2 de cada 100
-    else if (suerte <= 5) targetType = "chupito";   // 3 de cada 100
+    if (suerte === 0) targetType = "dto_cubata";
+    else if (suerte <= 2) targetType = "dto_rebujito";
+    else if (suerte <= 5) targetType = "chupito";
 
     const matchingIndices = [];
     sectores.forEach((sec, idx) => {
@@ -327,46 +336,56 @@
     requestAnimationFrame(animate);
   }
 
-  // 5. Mostrar premio y normas
+  // Mostrar el resultado (PREMIO 1, PREMIO 2, etc.)
   function mostrarPremio(tipo) {
     const fin = new Date(Date.now() + 15 * 60 * 1000);
     const horaStr = fin.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const ticketId = Math.floor(1000 + Math.random() * 9000);
 
     if (tipo === "nada") {
       resultadoDiv.innerHTML = `
         <div class="result-box">
           <div class="badge badge-lose">😢 ¡NO HUBO SUERTE!</div>
-          <p style="color:#ddd; margin-top:8px;">Lo sentimos, esta vez no te ha tocado nada.</p>
+          <p style="color:#ddd; margin-top:8px;">Esta vez no te ha tocado descuento.</p>
           <p style="color:#aaa; font-size:0.85rem; margin-top:4px;">Podrás volver a probar dentro de 60 minutos.</p>
         </div>
       `;
     } else {
+      // Numeración consecutiva que se reinicia cada día
+      const diaGuardado = localStorage.getItem("dia_feria_contador");
+      let numero = 1;
+
+      if (diaGuardado === String(hoyFecha)) {
+        numero = parseInt(localStorage.getItem("contador_premios") || "0") + 1;
+      } else {
+        localStorage.setItem("dia_feria_contador", String(hoyFecha));
+      }
+      localStorage.setItem("contador_premios", numero);
+
       let titulo = "";
       let detalle = "";
 
-      if (tipo === "cubata") {
-        titulo = "🎉 ¡HORA FELIZ DE CUBATAS! 🎉";
-        detalle = "Cubatas a precio reducido (máximo 4 consumiciones).";
-      } else if (tipo === "rebujito") {
-        titulo = "🌿 ¡PREMIO DE REBUJITO! 🌿";
-        detalle = "Rebujito a precio especial de caseta.";
+      if (tipo === "dto_cubata") {
+        titulo = "🍹 ¡1,50€ DE DESCUENTO EN CUBATA! 🍹";
+        detalle = "Descuento de 1,50 € en tu cubata al pedir en caja.";
+      } else if (tipo === "dto_rebujito") {
+        titulo = "🌿 ¡1,00€ DE DESCUENTO EN REBUJITO! 🌿";
+        detalle = "Descuento de 1,00 € en tu vaso/jarra de rebujito al pedir en caja.";
       } else if (tipo === "chupito") {
         titulo = "🥃 ¡CHUPITO DE REGALO! 🥃";
-        detalle = "Canjea un chupito gratis al pedir en caja.";
+        detalle = "Un chupito gratis al pedir tu consumición.";
       }
 
       resultadoDiv.innerHTML = `
         <div class="result-box">
-          <h2 style="font-size:1.35rem; color:#ffd700; margin-bottom:4px;">${titulo}</h2>
-          <div class="badge badge-win">TICKET #${ticketId}</div>
+          <h2 style="font-size:1.3rem; color:#ffd700; margin-bottom:4px;">${titulo}</h2>
+          <div class="badge badge-win">PREMIO ${numero}</div>
           <div class="time-box">Válido hasta las ${horaStr}</div>
           
           <div class="rules">
             <strong>Cómo canjear en El Resucitado:</strong>
             <ul>
               <li>${detalle}</li>
-              <li>Enseña esta pantalla de inmediato en la <strong>CAJA</strong>.</li>
+              <li>Enseña esta pantalla de inmediato en <strong>CAJA</strong>.</li>
               <li>Válido únicamente hasta las <strong>${horaStr}</strong>.</li>
             </ul>
           </div>
