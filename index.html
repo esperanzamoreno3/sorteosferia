@@ -27,7 +27,7 @@
       transition: background 0.4s ease;
     }
 
-    /* Colores por día */
+    /* Colores según el día (Martes: Fucsia / Miércoles: Verde) */
     body.martes {
       background-image: linear-gradient(rgba(216, 27, 96, 0.85), rgba(136, 14, 79, 0.9)), url('IMG_5861.jpg');
     }
@@ -147,10 +147,14 @@
     }
 
     .time-box {
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: bold;
       color: #ffeb3b;
       margin-bottom: 12px;
+      background: rgba(255, 235, 59, 0.12);
+      padding: 6px 12px;
+      border-radius: 8px;
+      display: inline-block;
     }
 
     .rules {
@@ -191,7 +195,7 @@
 </div>
 
 <script>
-  // Detección automática de Martes / Miércoles
+  // 1. Detección de Martes / Miércoles
   const fechaActual = new Date();
   const diaSemana = fechaActual.getDay(); // 2 = Martes, 3 = Miércoles
   const hoyFecha = fechaActual.getDate(); // Día del mes para reiniciar el contador
@@ -204,7 +208,7 @@
     document.body.classList.add('default-day');
   }
 
-  // Sectores de la ruleta
+  // 2. Sectores de la ruleta
   const sectores = [
     { text: "-1,50€ CUBATA", color: "#d81b60", type: "dto_cubata" },
     { text: "SUERTE", color: "#37474f", type: "nada" },
@@ -261,7 +265,7 @@
 
   drawWheel();
 
-  // Bloqueo de 60 minutos
+  // 3. Comprobación y activación del bloqueo de 60 minutos
   const COOLDOWN = 60 * 60 * 1000;
   const ultimo = localStorage.getItem("ultimo_tiro_resucitado");
   const ahora = Date.now();
@@ -283,13 +287,14 @@
     `;
   }
 
-  // Tirada de la ruleta
+  // 4. Lógica de giro y probabilidad
   function girarRuleta() {
     if (isSpinning) return;
     isSpinning = true;
     spinBtn.disabled = true;
     resultadoDiv.innerHTML = "";
 
+    // Guardar momento exacto del tiro para bloquear 60 min
     localStorage.setItem("ultimo_tiro_resucitado", Date.now());
 
     // Probabilidades (1 dto cubata, 2 dto rebujito, 3 chupitos, 94 nada)
@@ -336,11 +341,8 @@
     requestAnimationFrame(animate);
   }
 
-  // Mostrar el resultado (PREMIO 1, PREMIO 2, etc.)
+  // 5. Presentación del premio
   function mostrarPremio(tipo) {
-    const fin = new Date(Date.now() + 15 * 60 * 1000);
-    const horaStr = fin.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
     if (tipo === "nada") {
       resultadoDiv.innerHTML = `
         <div class="result-box">
@@ -350,7 +352,7 @@
         </div>
       `;
     } else {
-      // Numeración consecutiva que se reinicia cada día
+      // Numeración consecutiva del día
       const diaGuardado = localStorage.getItem("dia_feria_contador");
       let numero = 1;
 
@@ -379,14 +381,14 @@
         <div class="result-box">
           <h2 style="font-size:1.3rem; color:#ffd700; margin-bottom:4px;">${titulo}</h2>
           <div class="badge badge-win">PREMIO ${numero}</div>
-          <div class="time-box">Válido hasta las ${horaStr}</div>
+          <br>
+          <div class="time-box">📅 Válido durante todo el día de hoy</div>
           
           <div class="rules">
             <strong>Cómo canjear en El Resucitado:</strong>
             <ul>
               <li>${detalle}</li>
-              <li>Enseña esta pantalla de inmediato en <strong>CAJA</strong>.</li>
-              <li>Válido únicamente hasta las <strong>${horaStr}</strong>.</li>
+              <li>Enseña esta pantalla en <strong>CAJA</strong> para aplicar el descuento.</li>
             </ul>
           </div>
         </div>
