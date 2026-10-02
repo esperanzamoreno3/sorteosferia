@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ruleta Resucitado - Sorteos</title>
+  <title>Ruleta Resucitado - Demo</title>
   <style>
     * {
       box-sizing: border-box;
@@ -24,18 +24,7 @@
       background-position: center;
       background-repeat: no-repeat;
       background-attachment: fixed;
-      transition: background 0.4s ease;
-    }
-
-    /* Colores según el día (Martes: Fucsia / Miércoles: Verde) */
-    body.martes {
       background-image: linear-gradient(rgba(216, 27, 96, 0.85), rgba(136, 14, 79, 0.9)), url('IMG_5861.jpg');
-    }
-    body.miercoles {
-      background-image: linear-gradient(rgba(0, 137, 123, 0.85), rgba(0, 77, 64, 0.9)), url('IMG_5861.jpg');
-    }
-    body.default-day {
-      background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(0, 0, 0, 0.9)), url('IMG_5861.jpg');
     }
 
     .card {
@@ -141,10 +130,6 @@
       color: #111;
       border: 2px solid #fff;
     }
-    .badge-lose {
-      background: #333;
-      color: #eee;
-    }
 
     .time-box {
       font-size: 1rem;
@@ -195,20 +180,7 @@
 </div>
 
 <script>
-  // 1. Detección de Martes / Miércoles
-  const fechaActual = new Date();
-  const diaSemana = fechaActual.getDay(); // 2 = Martes, 3 = Miércoles
-  const hoyFecha = fechaActual.getDate(); // Día del mes para reiniciar el contador
-
-  if (diaSemana === 2) {
-    document.body.classList.add('martes');
-  } else if (diaSemana === 3) {
-    document.body.classList.add('miercoles');
-  } else {
-    document.body.classList.add('default-day');
-  }
-
-  // 2. Sectores de la ruleta
+  // Sectores de la ruleta (en este modo especial siempre caerá en uno de los premios)
   const sectores = [
     { text: "-1,50€ CUBATA", color: "#d81b60", type: "dto_cubata" },
     { text: "SUERTE", color: "#37474f", type: "nada" },
@@ -265,45 +237,19 @@
 
   drawWheel();
 
-  // 3. Comprobación y activación del bloqueo de 60 minutos
-  const COOLDOWN = 60 * 60 * 1000;
-  const ultimo = localStorage.getItem("ultimo_tiro_resucitado");
-  const ahora = Date.now();
   const resultadoDiv = document.getElementById("resultado");
   const spinBtn = document.getElementById("spinBtn");
+  let contadorDemo = 1;
 
-  if (ultimo && (ahora - parseInt(ultimo)) < COOLDOWN) {
-    const restante = Math.ceil((COOLDOWN - (ahora - parseInt(ultimo))) / 60000);
-    spinBtn.disabled = true;
-    spinBtn.textContent = "BLOQUEADO";
-    resultadoDiv.innerHTML = `
-      <div class="result-box">
-        <div class="badge badge-lose">⏳ Ya has probado suerte</div>
-        <p style="color:#bbb; font-size:0.95rem; margin-top:6px;">
-          Solo se permite 1 tirada cada 60 minutos por persona.<br>
-          Podrás volver a girar en <strong>${restante} minutos</strong>.
-        </p>
-      </div>
-    `;
-  }
-
-  // 4. Lógica de giro y probabilidad
   function girarRuleta() {
     if (isSpinning) return;
     isSpinning = true;
     spinBtn.disabled = true;
     resultadoDiv.innerHTML = "";
 
-    // Guardar momento exacto del tiro para bloquear 60 min
-    localStorage.setItem("ultimo_tiro_resucitado", Date.now());
-
-    // Probabilidades (1 dto cubata, 2 dto rebujito, 3 chupitos, 94 nada)
-    const suerte = Math.floor(Math.random() * 100);
-    let targetType = "nada";
-
-    if (suerte === 0) targetType = "dto_cubata";
-    else if (suerte <= 2) targetType = "dto_rebujito";
-    else if (suerte <= 5) targetType = "chupito";
+    // Para el vídeo: siempre elige uno de los premios (excluye "nada")
+    const premiosDisponibles = ["dto_cubata", "dto_rebujito", "chupito"];
+    const targetType = premiosDisponibles[Math.floor(Math.random() * premiosDisponibles.length)];
 
     const matchingIndices = [];
     sectores.forEach((sec, idx) => {
@@ -319,7 +265,7 @@
     const vueltasCompletas = 5 * 2 * Math.PI;
     const finalOffset = vueltasCompletas + targetOffset;
 
-    const duracion = 4500;
+    const duracion = 4000;
     const start = performance.now();
 
     function animate(time) {
@@ -334,6 +280,8 @@
         requestAnimationFrame(animate);
       } else {
         isSpinning = false;
+        spinBtn.disabled = false; // Se vuelve a habilitar inmediatamente para poder repetir la toma
+        spinBtn.textContent = "¡GIRAR DE NUEVO!";
         mostrarPremio(targetType);
       }
     }
@@ -341,59 +289,38 @@
     requestAnimationFrame(animate);
   }
 
-  // 5. Presentación del premio
   function mostrarPremio(tipo) {
-    if (tipo === "nada") {
-      resultadoDiv.innerHTML = `
-        <div class="result-box">
-          <div class="badge badge-lose">😢 ¡NO HUBO SUERTE!</div>
-          <p style="color:#ddd; margin-top:8px;">Esta vez no te ha tocado descuento.</p>
-          <p style="color:#aaa; font-size:0.85rem; margin-top:4px;">Podrás volver a probar dentro de 60 minutos.</p>
-        </div>
-      `;
+    let titulo = "";
+    let detalle = "";
+
+    if (tipo === "dto_cubata") {
+      titulo = "🍹 ¡1,50€ DE DESCUENTO EN CUBATA! 🍹";
+      detalle = "Descuento de 1,50 € en tu cubata al pedir en caja.";
+    } else if (tipo === "dto_rebujito") {
+      titulo = "🌿 ¡1,00€ DE DESCUENTO EN REBUJITO! 🌿";
+      detalle = "Descuento de 1,00 € en tu vaso/jarra de rebujito al pedir en caja.";
     } else {
-      // Numeración consecutiva del día
-      const diaGuardado = localStorage.getItem("dia_feria_contador");
-      let numero = 1;
-
-      if (diaGuardado === String(hoyFecha)) {
-        numero = parseInt(localStorage.getItem("contador_premios") || "0") + 1;
-      } else {
-        localStorage.setItem("dia_feria_contador", String(hoyFecha));
-      }
-      localStorage.setItem("contador_premios", numero);
-
-      let titulo = "";
-      let detalle = "";
-
-      if (tipo === "dto_cubata") {
-        titulo = "🍹 ¡1,50€ DE DESCUENTO EN CUBATA! 🍹";
-        detalle = "Descuento de 1,50 € en tu cubata al pedir en caja.";
-      } else if (tipo === "dto_rebujito") {
-        titulo = "🌿 ¡1,00€ DE DESCUENTO EN REBUJITO! 🌿";
-        detalle = "Descuento de 1,00 € en tu vaso/jarra de rebujito al pedir en caja.";
-      } else if (tipo === "chupito") {
-        titulo = "🥃 ¡CHUPITO DE REGALO! 🥃";
-        detalle = "Un chupito gratis al pedir tu consumición.";
-      }
-
-      resultadoDiv.innerHTML = `
-        <div class="result-box">
-          <h2 style="font-size:1.3rem; color:#ffd700; margin-bottom:4px;">${titulo}</h2>
-          <div class="badge badge-win">PREMIO ${numero}</div>
-          <br>
-          <div class="time-box">📅 Válido durante todo el día de hoy</div>
-          
-          <div class="rules">
-            <strong>Cómo canjear en El Resucitado:</strong>
-            <ul>
-              <li>${detalle}</li>
-              <li>Enseña esta pantalla en <strong>CAJA</strong> para aplicar el descuento.</li>
-            </ul>
-          </div>
-        </div>
-      `;
+      titulo = "🥃 ¡CHUPITO DE REGALO! 🥃";
+      detalle = "Un chupito gratis al pedir tu consumición.";
     }
+
+    resultadoDiv.innerHTML = `
+      <div class="result-box">
+        <h2 style="font-size:1.3rem; color:#ffd700; margin-bottom:4px;">${titulo}</h2>
+        <div class="badge badge-win">PREMIO ${contadorDemo++}</div>
+        <br>
+        <div class="time-box">📅 Válido durante todo el día de hoy</div>
+        
+        <div class="rules">
+          <strong>Cómo canjear en El Resucitado:</strong>
+          <ul>
+            <li>${detalle}</li>
+            <li>Enseña esta pantalla en <strong>CAJA</strong> para aplicar la promoción.</li>
+            <li>Válido exclusivamente durante el día de hoy.</li>
+          </ul>
+        </div>
+      </div>
+    `;
   }
 </script>
 
